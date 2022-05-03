@@ -1,1 +1,1 @@
-# Orange-Juice-Project
+# Orange Juice Project
