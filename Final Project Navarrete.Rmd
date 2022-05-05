@@ -1,0 +1,108 @@
+---
+title: "NavarreteFinalProject"
+author: "Rebeca Navarrete"
+date: "4/26/2022"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r include =FALSE}
+# Required Packages:
+if(!require(tidyverse)) install.packages("tidyverse", repos = "http://cran.us.r-project.org") # We need this package to to use the read_csv function as well as ggplot2 functions.
+
+if(!require(ggthemes)) install.packages("ggthemes", repos = "http://cran.us.r-project.org") # We need this package to to use the ggthemes functions
+
+#Getting the Orange Juice Dataset from GitHub
+
+#This is the URL for the data that will be analyzed.
+urlfile <- "https://raw.githubusercontent.com/rnavarrete2002/OrangeJuice-Project/main/Orange%20Juice%20Dataset.csv"
+
+# Read the data into R and name it orangeJuice.
+orangeJuice <- read_csv(url(urlfile))
+```
+
+## Introduction
+In this report, we analyze the _Orange Juice Data_. This data contains 1070 purchases where the customer either purchased Citrus Hill or Minute Maid Orange Juice. This data set contains the following characteristics: Purchase, WeekofPurchase, StoreID, PriceCH, PriceMM, DiscCH, DiscMM, SpecialCH, SpecialMM, LoyalCH, SalePriceMM, SalePriceCH, PriceDiff, Store7, PctDiscMM, PctDiscCH, ListPriceDiff, and STORE. Of all these characteristics, we will only use  PriceCH (price charged for CH), PriceMM (price charged for MM), SalesPriceMM (sale price for CH), and SalesPriceCH (sale price for CH) because our objective is to analyze the distribution and skewness of the price of the orange juices, the distribution and skewness of the sales price of the orange juices, and the relationship between the price and sales price of the orange juices.
+
+The abbreviated data set can be found at <https://github.com/rnavarrete2002/OrangeJuice-Project>, and the full data set can be found at 
+<https://vincentarelbundock.github.io/Rdatasets/datasets.html>
+
+To fulfill our objective, we will use a two-sample t-tests and a boxplot to analyze the distribution and skewness of the mentioned variables, and we will create a linear model to analyze the relationship of the same mentioned variables.
+
+```{r include = FALSE}
+# To make sure that we select the correct data set, we will look at the first six lines of it using the "head" function.
+head(orangeJuice)
+
+#While looking at the data set, we notice that our Price and SalePrice variables have a numeric type, while our Type variable (used to identify the type of orange juice) has a character type; thus, we proceed to change the Type variable into a factor using the "as.factor" function.
+orangeJuice$Type <- as.factor(orangeJuice$Type)
+```
+
+## Sales Price Visualization
+The following visualization is a boxplot of the price of Citrus Hill and Minute Maid orange juice. This visualization shows that Citrus Hill price is lower than Minute Maid price. Likewise, it shows there are some outliers among the Minute Maid price, and that the range of the price of Minute Maid is a little bit greater than the range of the prince of Citrus Hill. In this visualization, is important to mention that Citrus Hill sales price distribution is almost symmetric while Minute Maid sales price distribution is left-skewed (negative).
+
+```{r echo = FALSE}
+#Creates a boxplot of the sales price of Citrus Hill and Minute Maid orange juice
+p <- ggplot(orangeJuice, aes (x=Type, y=SalePrice)) + geom_boxplot(aes(fill=Type))
+p + labs (title="Orange Juice Boxplot", y="Sales Price in dollars") + 
+  theme_minimal() + scale_fill_discrete(name="Type", labels =c("Citrus Hill", "Minute Maid"))
+```
+
+## Price Visualization
+The following visualization is a boxplot of the price of Citrus Hill and Minute Maid orange juice. This visualization shows that Citrus Hill price is lower than Minute Maid price. Likewise, it shows there is an outlier among the Minute Maid price, and that the range of the price of Minute Maid is greater than the range of the sales prince of Citrus Hill. In this visualization, is important to mention that Citrus Hill price distribution is right-skewed (positive) while Minute Maid sales price distribution is almost symmetric.
+
+
+```{r echo = FALSE}
+#Creates a boxplot of the price of Citrus Hill and Minute Maid orange juice
+p <- ggplot(orangeJuice, aes (x=Type, y=Price)) + geom_boxplot(aes(fill=Type))
+p + labs (title="Orange Juice Boxplot", y="Price in dollars") + 
+  theme_minimal() + scale_fill_discrete(name="Type", labels =c("Citrus Hill", "Minute Maid")) 
+```
+
+## Sales Price Two-sample t-test
+The following two-sample t-test shows that the sales price means are equal. Citrus Hill has a mean sales price of 1.82 dollars while Minute Maid has a mean sales price of 1.96. Likewise, it shows that the p-value is less than 2.2e-16, which means that the results are significant (the p-value results could be due to the size of the sample).
+
+```{r echo = FALSE}
+#Creates a two-sample t-test of the sales price of Citrus Hill and Minute Maid orange juice
+CH <- orangeJuice %>% filter(Type == "CH") %>% select(SalePrice) 
+MM <- orangeJuice %>% filter(Type == "MM") %>% select(SalePrice)
+t.test(CH$SalePrice,MM$SalePrice)
+```
+
+## Price Two-sample t-test
+The following two-sample t-test shows that the price means are equal. Citrus Hill has a mean price of 1.87 dollars while Minute Maid has a mean price of 2.09. Likewise, it shows that the p-value is less than 2.2e-16, which means that the results are significant (the p-value results could be due to the size of the sample).
+
+```{r echo = FALSE}
+#Creates a two-sample t-test of the price of Citrus Hill and Minute Maid orange juice
+CH <- orangeJuice %>% filter(Type == "CH") %>% select(Price) 
+MM <- orangeJuice %>% filter(Type == "MM") %>% select(Price)
+t.test(CH$Price,MM$Price)
+```
+
+## Linear Model: Price as a function of Sale Price
+The linear model shows that the model equation is:
+  Price = 0.45SalePrice + 1.13
+These coefficients have quite low p-values so we can say they are definitely zero. The RMSE (Root Mean Squared Error) is 0.13 so we can say that the average error of this model when predicting the Price is about 0.13. Which means it is a good model.
+
+```{r include =FALSE}
+#Creates a linear function with output Price and input SalePrice.
+#Uses the summary function to display summaries of the fitting functions.
+model <- lm(orangeJuice$Price ~ orangeJuice$SalePrice)
+summary(model)
+```
+
+```{r echo = FALSE}
+#Creates a linear model that will predict price based on sales price
+Vis <- orangeJuice %>% ggplot()
+Vis + geom_point(aes(SalePrice,Price),col="deeppink") +
+  geom_abline(slope = 0.45,intercept = 1.13,col = "black") +
+  labs(title="Linear Model: Price as a function of Sale Price",
+       x = "Price in dollars",y="Sale Price in dollars") +
+  geom_text(x=2,y=1.8,label = "RMSE = 0.13",size = 3.5) + theme_minimal()
+```
+
+## Conclusion
+In conclusion, the distribution and skewness of the sales price of Citrus Hill and Minute Maid are different. The first one is almost symmetric while the second one is left-skewed. Besides, Minute Maid's sales price range is greater than Citrus Hill's sales price range. Here is important to mention that Minute Maid has an average sales price of 1.81 dollars while Citrus Hill has an average sales price of 1.96 dollars. The distribution and skewness of the price of Citrus Hill and Minute Maid are different. The first one is almost right-skewed while the second one is almost symmetric. Besides, Minute Maid's  price range is greater than Citrus Hill's price range. Here is important to mention that Minute Maid has an average price of 1.87 dollars while Citrus Hill has an average sales price of 2.10 dollars.
+Regarding the linear model, the equation found to predict price (Price = 0.45SalePrice + 1.13) had a low root mean squared error; thus, it is a great model to predict the price of Citrus Hill and Minute Maid orange juice. Likewise, it has a positive slope. This means that as the price increases, the sale price increases too.
